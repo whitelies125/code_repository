@@ -78,7 +78,9 @@ uint32_t Task1(void* scheduler)
 {
     std ::cout << "Task1" << std ::endl;
     auto sche = (Scheduler*)scheduler;
-    auto step = wfMng.GetStep(1);
+    auto workflow = WorkFlowMng::GetWorkFlowMng().GetWorkSpace(0);
+    if (workflow == nullptr) return -1;
+    auto step = workflow->GetStep(1);
     sche->SetWaitMsg(3);
     sche->AddStep(step);
     return 1;
@@ -102,13 +104,25 @@ uint32_t WorkFlowMngInit()
         {1, Step1},
     };
     uint32_t taskLen = sizeof(taskInfo) / sizeof(taskInfo[0]);
-    wfMng.Init(taskLen, taskInfo, taskLen, stepInfo, sizeof(stepInfo) / sizeof(stepInfo[0]));
-    return 0;
+    auto workflow = WorkFlowMng::GetWorkFlowMng().GetWorkSpace(0);
+    if (workflow == nullptr) return -1;
+    return workflow->Init(taskLen, taskInfo, taskLen, stepInfo,
+                          sizeof(stepInfo) / sizeof(stepInfo[0]));
 }
 
-uint32_t StartTask(uint32_t taskId) { return wfMng.StartTask(taskId); }
+uint32_t StartTask(uint32_t taskId)
+{
+    auto workflow = WorkFlowMng::GetWorkFlowMng().GetWorkSpace(0);
+    if (workflow == nullptr) return -1;
+    return workflow->StartTask(taskId);
+}
 
-Scheduler* GetSchedulerByMsg(uint32_t msgType) { return wfMng.FindWaitMsg(msgType); }
+Scheduler* GetSchedulerByMsg(uint32_t msgType)
+{
+    auto workflow = WorkFlowMng::GetWorkFlowMng().GetWorkSpace(0);
+    if (workflow == nullptr) return nullptr;
+    return workflow->FindWaitMsg(msgType);
+}
 
 uint32_t GetTaskIdByMsg(uint32_t msgType)
 {
@@ -165,6 +179,8 @@ uint32_t CheckSche()
 
 int main()
 {
+    auto& WorkFlowMng = WorkFlowMng::GetWorkFlowMng();
+    WorkFlowMng.Init(1);
     CheckIndex();
     CheckBlock();
     CheckMemPool();

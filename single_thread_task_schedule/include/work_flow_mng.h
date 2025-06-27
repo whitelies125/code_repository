@@ -6,7 +6,7 @@
 #include "scheduler_mng.h"
 #include "task_step_mng.h"
 
-class WorkFlowMng {
+class WorkFlow {
 public:
     uint32_t Init(uint32_t num, const TaskInfo* task, uint32_t taskLen, const StepInfo* step,
                   uint32_t stepLen);
@@ -19,6 +19,32 @@ private:
     StepMng stepMng_;
     TaskMng taskMng_;
     SchedulerMng scheMng_;
+};
+
+class WorkFlowMng {
+public:
+    static WorkFlowMng& GetWorkFlowMng()
+    {
+        static WorkFlowMng workFlowMng;
+        return workFlowMng;
+    }
+
+    uint32_t Init(uint32_t num)
+    {
+        workFlow_ = new WorkFlow[num];
+        len_ = num;
+        return 0;
+    }
+
+    WorkFlow* GetWorkSpace(uint32_t wfId)
+    {
+        if (wfId < len_) return workFlow_ + wfId;
+        return nullptr;
+    }
+
+private:
+    uint32_t len_;
+    WorkFlow* workFlow_;
 };
 
 #endif

@@ -1,7 +1,7 @@
 
 #include "work_flow_mng.h"
 
-uint32_t WorkFlowMng::Init(uint32_t num, const TaskInfo* task, uint32_t taskLen,
+uint32_t WorkFlow::Init(uint32_t num, const TaskInfo* task, uint32_t taskLen,
                            const StepInfo* step, uint32_t stepLen)
 {
     scheMng_.Init(num);
@@ -10,7 +10,7 @@ uint32_t WorkFlowMng::Init(uint32_t num, const TaskInfo* task, uint32_t taskLen,
     return 0;
 }
 
-uint32_t WorkFlowMng::StartTask(uint32_t taskId)
+uint32_t WorkFlow::StartTask(uint32_t taskId)
 {
     // 申请 scheduler
     Scheduler* scheduler = scheMng_.Alloc();
