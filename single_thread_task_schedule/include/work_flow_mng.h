@@ -8,14 +8,12 @@
 
 class WorkFlowMng {
 public:
-    uint32_t Init(TaskInfo* para, uint32_t paraLen);
-    uint32_t InitStepInfo(StepInfo* para, uint32_t paraLen);
+    uint32_t Init(uint32_t num, const TaskInfo* task, uint32_t taskLen, const StepInfo* step,
+                  uint32_t stepLen);
     uint32_t StartTask(uint32_t taskId);
 
     Func GetStep(uint32_t stepId) { return stepMng_.GetStep(stepId); }
-    Scheduler* FindWaitMsg(uint32_t msgType) {
-        return scheMng_.FindWaitMsg(msgType);
-    }
+    Scheduler* FindWaitMsg(uint32_t msgType) { return scheMng_.FindWaitMsg(msgType); }
 
 private:
     StepMng stepMng_;

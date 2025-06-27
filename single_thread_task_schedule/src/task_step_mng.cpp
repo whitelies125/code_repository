@@ -2,7 +2,7 @@
 
 StepMng::~StepMng() { delete stepInfo_; }
 // 初始化
-uint32_t StepMng::Init(StepInfo* para, uint32_t paraLen)
+uint32_t StepMng::Init(const StepInfo* para, uint32_t paraLen)
 {
     stepInfo_ = new StepInfo[paraLen];
     for (uint32_t i = 0; i < paraLen; ++i) {
@@ -23,7 +23,7 @@ Func StepMng::GetStep(uint32_t stepId)
 }
 TaskMng::~TaskMng() { delete taskInfo_; }
 // 初始化
-uint32_t TaskMng::Init(TaskInfo* para, uint32_t paraLen)
+uint32_t TaskMng::Init(const TaskInfo* para, uint32_t paraLen)
 {
     taskInfo_ = new TaskInfo[paraLen];
     for (uint32_t i = 0; i < paraLen; ++i) {

@@ -93,25 +93,23 @@ Task(2) Task(3)
 
 uint32_t WorkFlowMngInit()
 {
-    TaskInfo taskInfo[] = {
+    constexpr TaskInfo taskInfo[] = {
         {1, Task1},
         {2, Task2},
         {3, Task3},
     };
-    wfMng.Init(taskInfo, sizeof(taskInfo) / sizeof(taskInfo[0]));
-    StepInfo stepInfo[] = {
+    constexpr StepInfo stepInfo[] = {
         {1, Step1},
     };
-    wfMng.InitStepInfo(stepInfo, sizeof(stepInfo) / sizeof(stepInfo[0]));
+    uint32_t taskLen = sizeof(taskInfo) / sizeof(taskInfo[0]);
+    wfMng.Init(taskLen, taskInfo, taskLen, stepInfo,
+               sizeof(stepInfo) / sizeof(stepInfo[0]));
     return 0;
 }
 
 uint32_t StartTask(uint32_t taskId) { return wfMng.StartTask(taskId); }
 
-Scheduler* GetSchedulerByMsg(uint32_t msgType)
-{
-    return wfMng.FindWaitMsg(msgType);
-}
+Scheduler* GetSchedulerByMsg(uint32_t msgType) { return wfMng.FindWaitMsg(msgType); }
 
 uint32_t GetTaskIdByMsg(uint32_t msgType)
 {
