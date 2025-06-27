@@ -102,8 +102,7 @@ uint32_t WorkFlowMngInit()
         {1, Step1},
     };
     uint32_t taskLen = sizeof(taskInfo) / sizeof(taskInfo[0]);
-    wfMng.Init(taskLen, taskInfo, taskLen, stepInfo,
-               sizeof(stepInfo) / sizeof(stepInfo[0]));
+    wfMng.Init(taskLen, taskInfo, taskLen, stepInfo, sizeof(stepInfo) / sizeof(stepInfo[0]));
     return 0;
 }
 
@@ -129,6 +128,23 @@ uint32_t GetTaskIdByMsg(uint32_t msgType)
     return UINT32_MAX;
 }
 
+uint32_t HandleBySuspendScheduler(uint32_t msgType)
+{
+    Scheduler* sche = GetSchedulerByMsg(msgType);  // 查看是否有挂起的 scheduler 等待该消息
+    if (sche != nullptr) {
+        sche->SetWaitMsg(UINT32_MAX);
+        sche->Run();
+        return 0;
+    }
+    return -1;
+}
+
+uint32_t HandleByNewTask(uint32_t msgType)
+{
+    uint32_t taskId = GetTaskIdByMsg(msgType);  // 从获取处理该消息的 taskId
+    return StartTask(taskId);                   // 执行 taskId 对应的 task
+}
+
 uint32_t CheckSche()
 {
     using namespace std;
@@ -139,16 +155,11 @@ uint32_t CheckSche()
         if (msg.empty()) continue;
         auto msgType = msg.front();
         msg.pop();
-        auto sche = GetSchedulerByMsg(msgType);  // 查看是否有挂起的 scheduler 等待该消息
-        if (sche != nullptr) {
-            sche->SetWaitMsg(UINT32_MAX);
-            sche->Run();
-            continue;
-        }
-        uint32_t taskId = GetTaskIdByMsg(msgType);  // 从获取处理该消息的 taskId
-        StartTask(taskId);                          // 执行 taskId 对应的 task
+        if (HandleBySuspendScheduler(msgType) == 0) continue;
+        if (HandleByNewTask(msgType) == 0) continue;
+        cout << "error msg no handler : " << msgType << endl;
     }
-    std::cout << std::endl;
+    cout << endl;
     return 0;
 }
 

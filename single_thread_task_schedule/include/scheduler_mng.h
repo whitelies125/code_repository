@@ -10,15 +10,16 @@ public:
     uint32_t Run();
     void AddStep(Func step);
     void SetWaitMsg(uint32_t msgType) { waitMsg_ = msgType; }
+    uint32_t GetWaitMsg() { return waitMsg_; }
 
 public:
     static constexpr uint32_t MAX_STEP_NUM = 10;
-    uint32_t waitMsg_;
 
 private:
     uint32_t curStep_;
     uint32_t stepNum_;
     Func step_[MAX_STEP_NUM];  // task step 在代码上都是回调函数，合并处理
+    uint32_t waitMsg_;
 };
 
 class SchedulerMng {
@@ -32,7 +33,7 @@ public:
     Scheduler* FindWaitMsg(uint32_t msgType)
     {
         for (uint32_t i = 0; i < len_; ++i) {
-            if (schedulers_[i].waitMsg_ == msgType) {
+            if (schedulers_[i].GetWaitMsg() == msgType) {
                 return schedulers_;
             }
         }
