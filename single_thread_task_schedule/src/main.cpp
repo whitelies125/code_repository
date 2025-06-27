@@ -1,5 +1,6 @@
 #include <queue>
 
+#include "api.h"
 #include "index.h"
 #include "memory_pool.h"
 #include "work_flow_mng.h"
@@ -77,13 +78,13 @@ static WorkFlowMng wfMng;
 uint32_t Task1(void* scheduler)
 {
     std ::cout << "Task1" << std ::endl;
-    auto sche = (Scheduler*)scheduler;
-    auto workflow = WorkFlowMng::GetWorkFlowMng().GetWorkSpace(0);
-    if (workflow == nullptr) return -1;
-    auto step = workflow->GetStep(1);
-    sche->SetWaitMsg(3);
-    sche->AddStep(step);
-    return 1;
+
+    auto sche = static_cast<Scheduler*>(scheduler);
+    // 添加 step
+    AddStep(sche, 1);
+    // 设置等待消息
+    AddWaitMsg(sche, 3);
+    return 0;
 }
 Task(2) Task(3)
 
@@ -93,7 +94,7 @@ Task(2) Task(3)
     return 0;
 }
 
-uint32_t WorkFlowMngInit()
+uint32_t WorkFlowInit()
 {
     constexpr TaskInfo taskInfo[] = {
         {1, Task1},
@@ -108,13 +109,6 @@ uint32_t WorkFlowMngInit()
     if (workflow == nullptr) return -1;
     return workflow->Init(taskLen, taskInfo, taskLen, stepInfo,
                           sizeof(stepInfo) / sizeof(stepInfo[0]));
-}
-
-uint32_t StartTask(uint32_t taskId)
-{
-    auto workflow = WorkFlowMng::GetWorkFlowMng().GetWorkSpace(0);
-    if (workflow == nullptr) return -1;
-    return workflow->StartTask(taskId);
 }
 
 Scheduler* GetSchedulerByMsg(uint32_t msgType)
@@ -162,7 +156,7 @@ uint32_t HandleByNewTask(uint32_t msgType)
 uint32_t CheckSche()
 {
     using namespace std;
-    WorkFlowMngInit();
+    WorkFlowInit();
     // 模拟消息队列
     queue<int> msg({1, 2, 3});
     while (!msg.empty()) {
@@ -173,7 +167,6 @@ uint32_t CheckSche()
         if (HandleByNewTask(msgType) == 0) continue;
         cout << "error msg no handler : " << msgType << endl;
     }
-    cout << endl;
     return 0;
 }
 

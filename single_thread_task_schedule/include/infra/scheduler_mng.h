@@ -30,20 +30,11 @@ public:
     Scheduler* Alloc();
     // 释放调度器
     bool Free(void* addr);
-    Scheduler* FindWaitMsg(uint32_t msgType)
-    {
-        for (uint32_t i = 0; i < len_; ++i) {
-            if (schedulers_[i].GetWaitMsg() == msgType) {
-                return schedulers_;
-            }
-        }
-        return nullptr;
-    }
+    Scheduler* FindWaitMsg(uint32_t msgType);
 
 private:
     uint32_t len_;
     Scheduler* schedulers_;
     Index<uint32_t> index_;  // 仍然是使用 id分配器来管理独占资源
 };
-
 #endif

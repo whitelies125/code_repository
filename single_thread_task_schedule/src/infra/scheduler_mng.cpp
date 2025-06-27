@@ -48,3 +48,13 @@ bool SchedulerMng::Free(void* addr)
     uint32_t id = ((uint8_t*)addr - (uint8_t*)schedulers_) / sizeof(Scheduler);
     return index_.FreeId(id);
 }
+
+Scheduler* SchedulerMng::FindWaitMsg(uint32_t msgType)
+{
+    for (uint32_t i = 0; i < len_; ++i) {
+        if (schedulers_[i].GetWaitMsg() == msgType) {
+            return schedulers_;
+        }
+    }
+    return nullptr;
+}

@@ -31,7 +31,6 @@ public:
     ~TaskMng();
     // 初始化
     uint32_t Init(const TaskInfo* para, uint32_t paraLen);
-    // uint32_t RegisterStep(uint32_t taskId, StepInfo* para, uint32_t paraLen);
     // 根据 taskId 获取对于 task 函数
     Func GetTask(uint32_t taskId);
 
