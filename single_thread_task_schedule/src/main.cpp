@@ -3,6 +3,8 @@
 #include "api.h"
 #include "index.h"
 #include "memory_pool.h"
+#include "msgtype.h"
+#include "task_step_id.h"
 #include "work_flow_mng.h"
 
 void CheckIndex()
@@ -81,9 +83,10 @@ uint32_t Task1(void* scheduler)
 
     auto sche = static_cast<Scheduler*>(scheduler);
     // 添加 step
-    AddStep(sche, 1);
+    AddStep(sche, STEPID_DATA_PREPARE);
+    AddStep(sche, STEPID_ALLOC_RESOURCE);
     // 设置等待消息
-    AddWaitMsg(sche, 3);
+    AddWaitMsg(sche, 2);
     return 0;
 }
 Task(2) Task(3)
@@ -91,18 +94,25 @@ Task(2) Task(3)
     uint32_t Step1(void* scheduler)
 {
     std::cout << "Task1.Proc1" << std::endl;
+    return 1;
+}
+
+uint32_t Step2(void* scheduler)
+{
+    std::cout << "Task1.Proc2" << std::endl;
     return 0;
 }
 
 uint32_t WorkFlowInit()
 {
     constexpr TaskInfo taskInfo[] = {
-        {1, Task1},
-        {2, Task2},
-        {3, Task3},
+        {TASKID_USER_ACCESS, Task1},
+        {TASKID_USER_REQUEST, Task2},
+        {TASKID_USER_LOGOUT, Task3},
     };
     constexpr StepInfo stepInfo[] = {
-        {1, Step1},
+        {STEPID_DATA_PREPARE, Step1},
+        {STEPID_ALLOC_RESOURCE, Step2},
     };
     uint32_t taskLen = sizeof(taskInfo) / sizeof(taskInfo[0]);
     auto workflow = WorkFlowMng::GetWorkFlowMng().GetWorkSpace(0);
@@ -124,9 +134,9 @@ uint32_t GetTaskIdByMsg(uint32_t msgType)
         uint32_t msgType;
         uint32_t taskId;
     } para[] = {
-        {1, 1},
-        {2, 2},
-        {3, 3},
+        {MSG_USER_ACCESS, TASKID_USER_ACCESS},
+        {MSG_USER_REQUEST, TASKID_USER_REQUEST},
+        {MSG_USER_LOGOUT, TASKID_USER_LOGOUT},
     };
     for (const auto& it : para) {
         if (it.msgType == msgType) {
@@ -158,7 +168,7 @@ uint32_t CheckSche()
     using namespace std;
     WorkFlowInit();
     // 模拟消息队列
-    queue<int> msg({1, 2, 3});
+    queue<int> msg({MSG_USER_ACCESS, MSG_USER_REQUEST, MSG_USER_LOGOUT});
     while (!msg.empty()) {
         if (msg.empty()) continue;
         auto msgType = msg.front();

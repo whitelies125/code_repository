@@ -1,0 +1,18 @@
+#ifndef TASK_STEP_ID_H
+#define TASK_STEP_ID_H
+
+enum TaskId {
+    TASKID_USER_ACCESS = 0,
+    TASKID_USER_REQUEST,
+    TASKID_USER_LOGOUT,
+    TASKID_BUTT
+};
+
+enum StepId {
+    STEPID_DATA_PREPARE = 0,
+    STEPID_ALLOC_RESOURCE,
+    STEPID_RELEASE_RESOURCE,
+    STEPID_BUTT
+};
+
+#endif

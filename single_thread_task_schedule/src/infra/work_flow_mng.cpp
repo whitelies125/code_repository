@@ -1,8 +1,8 @@
 
 #include "work_flow_mng.h"
 
-uint32_t WorkFlow::Init(uint32_t num, const TaskInfo* task, uint32_t taskLen,
-                           const StepInfo* step, uint32_t stepLen)
+uint32_t WorkFlow::Init(uint32_t num, const TaskInfo* task, uint32_t taskLen, const StepInfo* step,
+                        uint32_t stepLen)
 {
     scheMng_.Init(num);
     taskMng_.Init(task, taskLen);
@@ -19,7 +19,7 @@ uint32_t WorkFlow::StartTask(uint32_t taskId)
     scheduler->SetTask(taskMng_.GetTask(taskId));
     // 执行 task
     uint32_t res = scheduler->Run();
-    if (res) return 0;
+    if (res == 1) return 0;
     // task 结束，释放 scheduler
     scheMng_.Free(scheduler);
     return 0;

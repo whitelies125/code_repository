@@ -19,12 +19,10 @@ void Scheduler::AddStep(Func step)
 uint32_t Scheduler::Run()
 {
     uint32_t res = 0;
-    for (; curStep_ < stepNum_; ++curStep_) {
+    while (curStep_ < stepNum_) {
         res = step_[curStep_](this);
-        if (res) {
-            ++curStep_;
-            return res;
-        }
+        ++curStep_;
+        if (res) break;
     }
     return res;
 }
