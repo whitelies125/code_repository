@@ -19,8 +19,7 @@ void* Block::Alloc(uint32_t size)
 bool Block::Free(void* addr)
 {
     uint32_t id = (uint32_t)((uint8_t*)addr - buff_) / size_;  // id = (addr - 内存池首地址) / 内存块大小
-                                                     //
-    return index.FreeId(id);                         // 只需要 id分配器释放 id 为可用即可
+    return index.FreeId(id) == 0;                         // 只需要 id分配器释放 id 为可用即可
 }
 
 MemPool::~MemPool() { delete[] blocks_; }

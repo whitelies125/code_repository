@@ -1,9 +1,28 @@
+#include <cassert>
 #include <thread>
 
 #include "index.h"
 #include "memory_pool.h"
 #include "thread_one.h"
 #include "work_flow_mng.h"
+
+#define EXPECT_EQ(expacted, actual)                                                      \
+    if (expacted != actual) {                                                            \
+        std::cout << std::endl;                                                          \
+        std::cout << "error: File: " << __FILE__ << ", Line: " << __LINE__ << std::endl; \
+        std::cout << "expacted: " << expacted << std::endl;                              \
+        std::cout << "actual: " << actual << std::endl;                                  \
+        std::cout << std::endl;                                                          \
+    }
+
+#define EXPECT_NE(expacted, actual)                                                      \
+    if (expacted == actual) {                                                            \
+        std::cout << std::endl;                                                          \
+        std::cout << "error: File: " << __FILE__ << ", Line: " << __LINE__ << std::endl; \
+        std::cout << "expacted: " << expacted << std::endl;                              \
+        std::cout << "actual: " << actual << std::endl;                                  \
+        std::cout << std::endl;                                                          \
+    }
 
 void CheckIndex()
 {
@@ -12,21 +31,31 @@ void CheckIndex()
     Index<uint8_t> index;
     index.Init(size);
     // ArrIndex<uint8_t, 3> index;
-    cout << "alloc test" << endl;
     for (uint32_t i = 0; i < size; ++i) {
-        cout << "id : " << (uint32_t)index.AllocId() << ", status : ";
+        // 测试申请完 0，1，2 内存块，预期申请成功
+        uint32_t id = index.AllocId();
+        EXPECT_EQ(i, id);
         index.Print();
     }
-    cout << (uint32_t)index.AllocId() << ", status : ";
+
+    // 测试再申请一块内存块，预期申请失败
+    uint32_t id = index.AllocId();
+    EXPECT_EQ(UINT8_MAX, id);
     index.Print();
-    cout << "free test" << endl;
     for (uint8_t i = 0; i < size; ++i) {
-        cout << "id : " << (uint32_t)index.FreeId(i) << ", status : ";
+        // 测试释放0，1，2内存块，预期释放成功
+        uint32_t ret = index.FreeId(i);
+        EXPECT_EQ(0, ret);
         index.Print();
     }
-    cout << (uint32_t)index.FreeId(0) << ", status : ";
+
+    // 测试再次释放0内存块，预期释放失败
+    uint32_t ret = index.FreeId(0);
+    EXPECT_EQ(UINT8_MAX, ret);
     index.Print();
-    cout << (uint32_t)index.FreeId(5) << ", status : ";
+    // 测试释放超出范围id的内存块，预期释放失败
+    ret = index.FreeId(5);
+    EXPECT_EQ(UINT8_MAX, ret);
     index.Print();
     cout << endl;
 }
@@ -36,14 +65,18 @@ void CheckBlock()
     using namespace std;
     Block block;
     block.Init(3, 1024);
-    cout << "alloc 1: " << (void*)block.Alloc(0) << endl;     // 申请成功
-    cout << "alloc 2: " << (void*)block.Alloc(512) << endl;   // 申请成功
-    cout << "alloc 3: " << (void*)block.Alloc(1025) << endl;  // 超出内存块大小，申请失败
-    void* ptr = nullptr;
-    cout << "alloc 4: " << (ptr = (void*)block.Alloc(1024)) << endl;  // 申请成功
-    cout << "alloc 5: " << (void*)block.Alloc(1024) << endl;          // 内存池耗尽，申请失败
-    block.Free(ptr);                                                  // 归还 1 个内存块
-    cout << "alloc 6: " << (void*)block.Alloc(1024) << endl;          // 申请成功
+    void* ptr1 = block.Alloc(0);  // 申请成功
+    EXPECT_NE(nullptr, ptr1)
+    void* ptr2 = block.Alloc(512);  // 申请成功
+    EXPECT_NE(nullptr, ptr2)
+    void* ptr3 = block.Alloc(1025);  // 超出内存块大小，申请失败
+    EXPECT_EQ(nullptr, ptr3)
+    void* ptr4 = block.Alloc(1024);  // 申请成功
+    EXPECT_NE(nullptr, ptr2)
+    bool ret = block.Free(ptr1);  // 归还 1 个内存块
+    EXPECT_EQ(true, ret)
+    void* ptr5 = block.Alloc(1024);  // 申请成功
+    EXPECT_NE(nullptr, ptr5)
     cout << endl;
 }
 void CheckMemPool()
@@ -55,15 +88,21 @@ void CheckMemPool()
     };
     MemPool memPool;
     memPool.Init(para, sizeof(para) / sizeof(para[0]));
-    cout << "alloc 1: " << (void*)memPool.Alloc(2049) << endl;  // 申请失败，超出最大内存块大小
-    void* ptr = nullptr;
-    cout << "alloc 2: " << (ptr = (void*)memPool.Alloc(0)) << endl;  // 申请成功，使用 1K 大小内存块
-    cout << "alloc 3: " << (void*)memPool.Alloc(512) << endl;        // 申请成功，使用 2K 大小内存块
-    cout << "alloc 4: " << (void*)memPool.Alloc(1024) << endl;       // 申请失败，内存池耗尽
-    memPool.Free(ptr);                                               // 归还 1K 大小内存块
-    cout << "alloc 5: " << (void*)memPool.Alloc(1025)
-         << endl;  // 申请失败，1025B 超出可用最大内存块大小
-    cout << "alloc 6: " << (void*)memPool.Alloc(1024) << endl;  // 申请成功，使用 1K 大小内存块
+    void* ptr1 = memPool.Alloc(2049);  // 申请失败，超出最大内存块大小
+    EXPECT_EQ(nullptr, ptr1)
+    void* ptr2 = memPool.Alloc(0);  // 申请成功，使用 1K 大小内存块
+    EXPECT_NE(nullptr, ptr2)
+    void* ptr3 = memPool.Alloc(512);  // 申请成功，使用 2K 大小内存块
+    EXPECT_NE(nullptr, ptr3)
+    void* ptr4 = memPool.Alloc(1024);  // 申请成功，使用 2K 大小内存块
+    EXPECT_NE(nullptr, ptr4)
+    void* ptr5 = memPool.Alloc(1024);  // 申请失败，内存池耗尽
+    EXPECT_EQ(nullptr, ptr5)
+    memPool.Free(ptr1);                // 归还 1K 大小内存块
+    void* ptr6 = memPool.Alloc(1025);  // 申请失败，超出最大内存块大小
+    EXPECT_EQ(nullptr, ptr6)
+    void* ptr7 = memPool.Alloc(1024);  // 申请成功，使用 1K 大小内存块
+    EXPECT_EQ(nullptr, ptr7)
     cout << endl;
 }
 
