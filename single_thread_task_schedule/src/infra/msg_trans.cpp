@@ -2,7 +2,7 @@
 
 uint32_t MsgDispatcher::Register(uint32_t key, MsgProcessor *msgProcessor)
 {
-    if (len_ < MAX_KEYMAP_LEN) return -1;
+    if (len_ >= MAX_KEYMAP_LEN) return -1;
     keymap_[len_].key = key;
     keymap_[len_].msgProcessor = msgProcessor;
     ++len_;

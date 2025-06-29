@@ -14,6 +14,8 @@ public:
 
     Func GetStep(uint32_t stepId) { return stepMng_.GetStep(stepId); }
     Scheduler* FindWaitMsg(uint32_t msgType) { return scheMng_.FindWaitMsg(msgType); }
+    TaskMng& GetTaskMng() { return taskMng_; };
+    StepMng& GetStepMng() { return stepMng_; };
 
 private:
     StepMng stepMng_;

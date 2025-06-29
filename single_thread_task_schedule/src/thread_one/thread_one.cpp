@@ -3,30 +3,10 @@
 #include <thread>
 
 #include "api.h"
-#include "msg_trans.h"
+#include "msg_handler.h"
 #include "msgtype.h"
-#include "scheduler_mng.h"
 #include "task_step_id.h"
-
-class PidDispatcher : public MsgProcessor, MsgDispatcher {
-public:
-    virtual uint32_t OnMsg(const void* msg) { return Dispatch(msg); }
-    virtual uint32_t GetKey(const void* msg)
-    {
-        auto msgHead = static_cast<const MsgHead*>(msg);
-        return msgHead->senderPid;
-    };
-};
-
-class MsgTypeDispatcher : public MsgProcessor, MsgDispatcher {
-public:
-    virtual uint32_t OnMsg(const void* msg) { return Dispatch(msg); }
-    virtual uint32_t GetKey(const void* msg)
-    {
-        auto msgHead = static_cast<const MsgHead*>(msg);
-        return msgHead->msgType;
-    };
-};
+#include "work_flow_mng.h"
 
 #define Task(x)                              \
     static uint32_t Task##x(void* scheduler) \
@@ -49,7 +29,7 @@ static uint32_t Task1(void* scheduler)
 }
 Task(2) Task(3)
 
-static uint32_t Step1(void* scheduler)
+    static uint32_t Step1(void* scheduler)
 {
     std::cout << "Task1.Proc1" << std::endl;
     return 1;
@@ -60,9 +40,30 @@ static uint32_t Step2(void* scheduler)
     std::cout << "Task1.Proc2" << std::endl;
     return 0;
 }
+static PidDispatcher pidDispatcher;
+static MsgTypeDispatcher userDispatcher;
+static MsgTypeDispatcher threadTwoDispatcher;
+static MsgTypeProcessor msgTypeProcessor;
+enum Pid {
+    PID_USER = 0,
+    PID_THREAD_ONE = 1,
+    PID_THREAD_TWO = 2,
+    PID_BUTT
+};
+
+static uint32_t MsgTransInit()
+{
+    pidDispatcher.Register(PID_USER, &userDispatcher);
+    pidDispatcher.Register(PID_THREAD_TWO, &threadTwoDispatcher);
+    userDispatcher.Register(MSG_USER_ACCESS, &msgTypeProcessor);
+    userDispatcher.Register(MSG_USER_REQUEST, &msgTypeProcessor);
+    userDispatcher.Register(MSG_USER_LOGOUT, &msgTypeProcessor);
+    return 0;
+}
 
 static uint32_t WorkFlowInit()
 {
+    MsgTransInit();
     constexpr TaskInfo taskInfo[] = {
         {TASKID_USER_ACCESS, Task1},
         {TASKID_USER_REQUEST, Task2},
@@ -79,61 +80,26 @@ static uint32_t WorkFlowInit()
                           sizeof(stepInfo) / sizeof(stepInfo[0]));
 }
 
-static Scheduler* GetSchedulerByMsg(uint32_t msgType)
-{
-    auto workflow = WorkFlowMng::GetWorkFlowMng().GetWorkSpace(0);
-    if (workflow == nullptr) return nullptr;
-    return workflow->FindWaitMsg(msgType);
-}
-
-static uint32_t GetTaskIdByMsg(uint32_t msgType)
-{
-    struct {
-        uint32_t msgType;
-        uint32_t taskId;
-    } para[] = {
-        {MSG_USER_ACCESS, TASKID_USER_ACCESS},
-        {MSG_USER_REQUEST, TASKID_USER_REQUEST},
-        {MSG_USER_LOGOUT, TASKID_USER_LOGOUT},
-    };
-    for (const auto& it : para) {
-        if (it.msgType == msgType) {
-            return it.taskId;
-        }
-    }
-    return UINT32_MAX;
-}
-
-static uint32_t HandleBySuspendScheduler(uint32_t msgType)
-{
-    Scheduler* sche = GetSchedulerByMsg(msgType);  // 查看是否有挂起的 scheduler 等待该消息
-    if (sche != nullptr) {
-        sche->SetWaitMsg(UINT32_MAX);
-        sche->Run();
-        return 0;
-    }
-    return -1;
-}
-
-static uint32_t HandleByNewTask(uint32_t msgType)
-{
-    uint32_t taskId = GetTaskIdByMsg(msgType);  // 从获取处理该消息的 taskId
-    return StartTask(taskId);                   // 执行 taskId 对应的 task
-}
-
 static uint32_t ThreadOneInit()
 {
-    using namespace std;
     WorkFlowInit();
     // 模拟消息队列
-    queue<int> msg({MSG_USER_ACCESS, MSG_USER_REQUEST, MSG_USER_LOGOUT});
-    while (!msg.empty()) {
-        if (msg.empty()) continue;
-        auto msgType = msg.front();
-        msg.pop();
-        if (HandleBySuspendScheduler(msgType) == 0) continue;
-        if (HandleByNewTask(msgType) == 0) continue;
-        cout << "error msg no handler : " << msgType << endl;
+    std::queue<Msg> msgQueue;
+    Msg msg;
+    msg.senderPid = PID_USER;
+    msg.msgType = MSG_USER_ACCESS;
+    msgQueue.push(msg);
+    msg.senderPid = PID_USER;
+    msg.msgType = MSG_USER_REQUEST;
+    msgQueue.push(msg);
+    msg.senderPid = PID_USER;
+    msg.msgType = MSG_USER_LOGOUT;
+    msgQueue.push(msg);
+    while (!msgQueue.empty()) {
+        if (msgQueue.empty()) continue;
+        auto msgType = msgQueue.front();
+        msgQueue.pop();
+        pidDispatcher.OnMsg(&msgType);
     }
     return 0;
 }

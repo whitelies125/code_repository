@@ -1,5 +1,6 @@
 
 #include "api.h"
+#include "work_flow_mng.h"
 
 uint32_t AddStep(Scheduler* scheduler, uint32_t stepId)
 {

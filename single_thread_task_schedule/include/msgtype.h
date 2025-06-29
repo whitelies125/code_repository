@@ -4,8 +4,8 @@
 #include <cstdint>
 
 #define MSG_HEAD         \
-    uint32_t sendPid;    \
-    uint32_t receviePid; \
+    uint32_t senderPid;    \
+    uint32_t recevierPid; \
     uint32_t msgType;    \
     uint32_t transId;
 
@@ -17,18 +17,24 @@ struct MsgHead {
 };
 
 struct MsgUserAccess {
-    MSG_HEAD
     uint32_t accessCause;
 };
 
 struct MsgUserRequest {
-    MSG_HEAD
     uint32_t userId;
 };
 
 struct MsgUserLogout {
-    MSG_HEAD
     uint32_t userId;
+};
+
+struct Msg {
+    MSG_HEAD
+    union {
+        MsgUserAccess msgUserAccess;
+        MsgUserRequest msgUserRequest;
+        MsgUserLogout msgUserLogout;
+    } u;
 };
 
 enum MsgType {
