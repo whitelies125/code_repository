@@ -76,4 +76,7 @@ BraceWrapping:
 #     return
 # }
 AllowShortIfStatementsOnASingleLine: AllIfsAndElse
+# 为 false: 每个枚举单独换行
+# 为 true: 多个短枚举可能会在同一行
+AllowShortEnumsOnASingleLine: false
 ...

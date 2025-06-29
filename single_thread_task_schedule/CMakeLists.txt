@@ -13,10 +13,12 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # 4,设定源码列表,查找指定目录下的所有源文件,并将名称保存到 DIR_SRCS 变量中
 aux_source_directory(./src/ DIR_SRC)
 aux_source_directory(./src/infra DIR_SRC)
+aux_source_directory(./src/thread_one DIR_SRC)
 
 # 5,设定头文件路径
 include_directories(./include/
-                    ./include/infra)
+                    ./include/infra
+                    ./include/thread_one)
 
 # 6，把源码编译成一个可执行文件，文件名为main（可以随便取名），会保存在当前目录下
 add_executable( main ${DIR_SRC} )
